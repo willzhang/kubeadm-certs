@@ -29,7 +29,7 @@ jobs:
  
   build-kubeadm:
     needs: build-matrix
-    if: ${{ matrix.version != null }}
+    if: ${{ fromJson(needs.build-matrix.outputs.version_matrix) != null }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
