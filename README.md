@@ -1,6 +1,6 @@
 # kubeadm-certs
 
-kubeadm-certs 只将 kubeadm 的证书有效期设置为10年，未对源码做任何其他修改。编译脚本见 [.travis.yml](.travis.yml) , CI 见 [![Build Status](https://travis-ci.com/lework/kubeadm-certs.svg?branch=master)](https://travis-ci.com/lework/kubeadm-certs)
+kubeadm-certs 只将 kubeadm 的证书有效期设置为10年，未对源码做任何其他修改。编译脚本见 [release.yml](.github/workflows/release.yml) , CI 见 [![Build Status](https://github.com/willzhang/kubeadm-certs/actions/workflows/release.yml/badge.svg)](https://github.com/willzhang/kubeadm-certs/actions)
 
 
 ## go 版本
