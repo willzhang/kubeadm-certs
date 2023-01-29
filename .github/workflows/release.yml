@@ -38,6 +38,7 @@ jobs:
         uses: actions/checkout@v3
     
       - name: build-kubeadm
+        if: ${{ matrix.version != null }}
         run: |
           echo ${{ matrix.version }}
           git clone -q --depth=1 --branch ${{ matrix.version }} --progress https://github.com/kubernetes/kubernetes.git
