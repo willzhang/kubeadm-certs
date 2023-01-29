@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+  
+jobs:
+  build-matrix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        
+      - name: set-matrix
+        id: set-matrix
+        run: |
+          latest_tags="$(git ls-remote --tags https://github.com/kubernetes/kubernetes.git | grep 'v[1-9]\.[0-9]*\.[0-9]*$' | awk -F'tags/' '{print $2}' | sort -t. -k1,1n -k2,2n -k3,3n)"
+          echo ${latest_tags} | xargs -n 1 > kube_version_latest.txt 
+          comm -13  <(sort kube_version.txt) <(sort kube_version_latest.txt) >new_tags.txt
+          echo "::set-output name=version_matrix::$(cat new_tags.txt|jq -cnR '[inputs | select(length>0)]')"
+          cp kube_version_latest.txt kube_version.txt
+          rm -rf kube_version_latest.txt new_tags.txt
+          
+      - name: Create a GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: v1.0.8
