@@ -15,7 +15,7 @@ jobs:
         run: |
           old_tags=$(cat kube_version.txt)
           all_tags=$(git ls-remote --tags https://github.com/kubernetes/kubernetes.git | grep 'v[1-9]\.[0-9]*\.[0-9]*$' | awk -F'tags/' '{print $2}' | sort -t. -k1,1n -k2,2n -k3,3n)
-          new_tags=$(comm -13 <(printf "%s\n" "$old_tags") <(printf "%s\n" "$latest_tags"))
+          new_tags=$(comm -13 <(printf "%s\n" "$old_tags") <(printf "%s\n" "$all_tags"))
           echo "version_matrix=$(echo ${new_tags} | jq -cnR '[inputs | select(length>0)]')" >> $GITHUB_OUTPUT
           echo ${latest_tags} | xargs -n 1 > kube_version.txt
           
