@@ -20,8 +20,9 @@ jobs:
           cp kube_version_latest.txt kube_version.txt
           rm -rf kube_version_latest.txt new_tags.txt
           
-      - name: Create a GitHub release
-        uses: ncipollo/release-action@v1
+      - name: Release
+        uses: softprops/action-gh-release@v1
         with:
-          tag: v1.0.8
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          files: |
+            ${{ GITHUB_WORKSPACE }}/kube_version.txt
+          tag_name: v1.0.9
