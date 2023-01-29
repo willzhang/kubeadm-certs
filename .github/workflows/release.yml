@@ -20,9 +20,54 @@ jobs:
           cp kube_version_latest.txt kube_version.txt
           rm -rf kube_version_latest.txt new_tags.txt
           
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: update release
+ 
+    outputs:
+      version_matrix: ${{ steps.set-matrix.outputs.version_matrix }}
+ 
+  build-kubeadm:
+    needs: build-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: ${{ fromJson(needs.build-matrix.outputs.version_matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+    
+      - name: build-kubeadm
+        run: |
+          echo ${{ matrix.version }}
+          git clone -q --depth=1 --branch ${{ matrix.version }} --progress https://github.com/kubernetes/kubernetes.git
+          cd kubernetes
+          git checkout -b ${{ matrix.version }} ${{ matrix.version }}
+          git branch
+          sed -i 's#time.Hour \* 24 \* 365#time.Hour * 24 * 365 * 10#g'  cmd/kubeadm/app/constants/constants.go
+          grep -n -R CertificateValidity ./*
+          grep -n -R duration365d ./*
+          build_version=$(cat build/build-image/cross/VERSION)
+          docker pull k8s.gcr.io/build-image/kube-cross:${build_version} 
+          ./build/run.sh make kubeadm KUBE_BUILD_PLATFORMS=linux/amd64 >/dev/null
+          ls -l _output/dockerized/bin/linux/amd64/
+          ./build/run.sh make kubeadm KUBE_BUILD_PLATFORMS=linux/386 >/dev/null
+          ls -l _output/dockerized/bin/linux/amd64/
+          cp _output/dockerized/bin/linux/386/kubeadm  _output/kubeadm-linux-386 || return 1
+          cp _output/dockerized/bin/linux/amd64/kubeadm  _output/kubeadm-linux-amd64 || return 1
+          ls -al _output/kubeadm-*
+          _output/kubeadm-linux-386 version
+          _output/kubeadm-linux-amd64 version
+          echo "[certs] test"
+          sudo _output/kubeadm-linux-amd64 init phase certs all
+          sudo _output/kubeadm-linux-amd64 init phase kubeconfig all
+          sudo _output/kubeadm-linux-amd64 certs check-expiration || sudo _output/kubeadm-linux-amd64 alpha certs check-expiration
+          cd ${{ github.workspace }}
+
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            kube_version.txt
-          tag_name: v1.0.9
+             ${{ github.workspace }}/kubernetes/_output/kubeadm-linux-amd64
+             ${{ github.workspace }}/kubernetes/_output/kubeadm-linux-386
+          tag_name: ${{ matrix.version }}
